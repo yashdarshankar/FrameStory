@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks, Request
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -136,7 +136,7 @@ def parse_time_to_ms(ts_str):
     return int(float(start) * 1000)
 
 @app.post("/download-video")
-async def download_video(background_tasks: BackgroundTasks, video: UploadFile = File(...), commentary: str = Form(...)):
+async def download_video(request: Request, background_tasks: BackgroundTasks, video: UploadFile = File(...), commentary: str = Form(...)):
     com_data = json.loads(commentary)
     temp_dir = tempfile.mkdtemp()
     
@@ -201,4 +201,4 @@ async def download_video(background_tasks: BackgroundTasks, video: UploadFile = 
     # We can clean up the temp directory safely now
     shutil.rmtree(temp_dir, ignore_errors=True)
     
-    return {"status": "success", "url": f"http://localhost:8000/static/{unique_filename}"}
+    return {"status": "success", "url": f"{request.base_url}static/{unique_filename}"}
