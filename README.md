@@ -1,109 +1,112 @@
-# Cinematic Intelligence - AI Video Commentator
+# FrameStory - AI Video Commentator System
 
-Cinematic Intelligence is a comprehensive full-stack application that leverages the power of generative AI to automatically analyze videos, generate contextual narrations in various styles (e.g., Documentary, Funny, Dramatic), and produce a final narrated video.
+FrameStory is a production-grade, asynchronous full-stack application that leverages the power of generative AI to automatically analyze videos, extract intelligent highlights, generate contextual narrations in various personas (e.g., Documentary, Funny, Sports), and produce a final synced video output with human-like Text-to-Speech (TTS).
 
-It uses a React frontend for an elegant, cinematic user experience, and a FastAPI backend empowered by the Gemini 2.5 Flash multimodal model for video understanding.
-
-## 🚀 Features
-
-- **Automated Video Analysis**: Frame-by-frame context extraction, scene understanding, and OCR via Gemini AI.
-- **Dynamic Narration Styles**: Choose an AI persona to narrate your video (Documentary, Funny, Dramatic, Educational, or Sports Commentary).
-- **Live In-Browser Playback**: View the synthesized commentary synced to the video playback using the Web Speech API (`SpeechSynthesis`).
-- **Video Export**: A fully automated pipeline using Google Text-to-Speech (gTTS) and FFmpeg to mix TTS narrations seamlessly over the original video track at the appropriate timestamps.
-- **Premium UI/UX**: Dark-themed, modern, glassmorphic UI built with React.
+The system features a **React** frontend leveraging the *Digital Curator* (Stitch v2) design system, and a highly concurrent **FastAPI** backend orchestrating background processing jobs via **Celery**.
 
 ---
 
-## 🛠 Tech Stack
+## 🚀 Key Features
+
+* **Async Processing Pipeline**: Heavy video extraction and AI generation jobs are offloaded to a Celery worker queue, allowing the API and UI to remain fully responsive.
+* **Smart Frame Sampling**: Utilizes FFmpeg scene detection and OpenCV heuristics to extract ONLY high-value keyframes, optimizing API latency and inference costs.
+* **Multimodal API Intelligence**: Employs Gemini 2.5 Flash to comprehend scenes chronologically and emit rigorous, time-bound JSON commentary logic.
+* **Narration Personality Engine**: Adaptive system prompt layer altering the commentary style based on user selection (Documentary, Teacher, Sports, Funny).
+* **Audio-Video Weaver**: Employs `gTTS` and FFmpeg filters (`adelay`, `amix`, `volume`) to precisely time dubs over the original source material.
+* **JWT Authentication**: Full persistent SQL-based user system and a "My Videos" job dashboard.
+
+---
+
+## 🏗 Tech Stack
 
 ### Frontend
 - **Framework**: React 18 with Vite
-- **Styling**: Vanilla CSS with CSS Variables for a responsive, dark-mode design
-- **Icons**: Lucide React
-- **HTTP Client**: Axios
-- **Live Text-to-Speech**: Web Speech API (`SpeechSynthesis`)
+- **Routing & State**: `react-router-dom`, Zustand
+- **Design System**: "Digital Curator" (Glassmorphism, Dark mode, Space Grotesk / Inter typography)
+- **Icons & HTTP**: Lucide-React, Axios
 
-### Backend
+### Backend & Infrastructure
 - **Framework**: FastAPI (Python)
-- **Generative AI**: `google-genai` (Gemini 2.5 Flash model)
-- **Video & Audio Processing**: `gTTS` (Text-to-Speech) and `imageio-ffmpeg` (FFmpeg binary management)
-- **CORS & Static Files**: Built-in FastAPI utilities
+- **Queue Pipeline**: Celery (Currently configured rapidly utilizing SQLAlchemy/SQLite Broker for environments without Docker/Redis)
+- **Database / Auth**: SQLite, SQLAlchemy, `passlib`, `python-jose` (JWT OAuth2)
+- **Intelligence**: `google-genai` (Gemini SDK), OpenCV, FFmpeg
+- **TTS**: `gTTS`
 
 ---
 
-## 🏗 Submodules & Architecture
-
-### 1. The Backend (`/backend`)
-The backend is a FastAPI server located in the `backend/` directory.
-
-#### Key Endpoints:
-- `POST /analyze-video`: 
-  - Receives the video blob (`Multipart/form-data`) and the requested style.
-  - Temporarily uploads the video to the Gemini File API.
-  - Uses `gemini-2.5-flash` with a strict multimodal prompt to return a JSON array containing timestamps, context summaries, and the targeted script.
-- `POST /download-video`: 
-  - Receives the source video blob and the raw JSON commentary data.
-  - Synthesizes audio files using Python `gTTS`.
-  - Runs a complex `ffmpeg` graph (`amix`, `adelay`, `volume`) to overlay the generated voices precisely onto the original video timestamps.
-  - Returns a URL to the finished, commentated video stored in `/static`.
-
-### 2. The Frontend (`/frontend`)
-The frontend is a Vite + React application located in the `frontend/` directory.
-
-#### Core Flow:
-- App initialized at `App.jsx`.
-- State managed for the currently uploaded video, parsed timeline, and AI narrative result (`result`).
-- A dual pane dashboard:
-  - **Left**: Video player synced with a high-level summary and music mood suggestions.
-  - **Right**: A scrolling list of generated script dialogue lines highlight interactively with the video clock (`currentTime`).
-
----
-
-## 📦 Getting Started
+## 📦 Local Development Setup
 
 ### Prerequisites
 - Python 3.9+
 - Node.js & npm
+- FFmpeg installed and accessible in the system path (`imageio-ffmpeg` dependency generally handles this in Python, but native FFmpeg is recommended).
 - A valid Google Gemini API Key
 
-### 1. Setup Backend
+### 1. Setup the Backend & Worker
+
+Open a terminal and set up the Python environment:
 ```bash
 cd backend
 
 # Create and activate virtual environment
 python -m venv venv
-source venv/Scripts/activate # On Windows use: venv\Scripts\activate.ps1
+# On Windows:
+.\venv\Scripts\Activate.ps1
+# On Mac/Linux:
+source venv/bin/activate
 
-# Install dependencies
+# Install all architecture dependencies
 pip install -r requirements.txt
 
-# Environment Setup
-# Create a .env file in the backend directory and add your GEMINI_API_KEY
-# Example: GEMINI_API_KEY=AIzaSyxxxxxxxxx
-
-# Run the backend
-uvicorn main:app --reload
-# It will run at http://localhost:8000
+# Create your .env file
+echo GEMINI_API_KEY=your_genai_api_key > .env
 ```
 
-### 2. Setup Frontend
+You must run TWO processes for the backend to function (the API router and the Celery worker).
+
+**Window 1 (The FastAPI Server):**
+```bash
+# Serves the REST API and the Static File directory
+uvicorn main:app --reload
+```
+
+**Window 2 (The Celery Worker):**
+```bash
+# Processes the asynchronous intelligence background tasks
+celery -A celery_worker.celery_app worker --loglevel=info --pool=eventlet
+```
+
+### 2. Setup the Frontend
+
+Open a **third** terminal window:
 ```bash
 cd frontend
 
 # Install dependencies
 npm install
 
-# Run the development server
+# Run the development environment
 npm run dev
-# It will run at http://localhost:5173
 ```
+
+The frontend will be accessible at `http://localhost:5173`. You can register a new account, login, and access the intelligent video upload dashboard.
 
 ---
 
-## 🔧 Future Enhancements
-- Expand audio support to multiple languages.
-- Integration with external high-fidelity Voice Generation models (e.g. ElevenLabs).
-- Video stabilization and cropping pre-processing features.
+## 🔌 API Endpoints
+All protected endpoints expect a `Bearer {token}` header.
 
-## 🤝 Contributing
-Open an issue or submit a pull request if you want to contribute to the Cinematic Intelligence AI tool.
+- **`POST /register`**: Create new User
+- **`POST /token`**: Returns OAuth2 JWT Token
+- **`POST /upload-video`** *(Auth)*: Submits `video` file and `style` form. Returns a Celery `job_id`.
+- **`GET /status/{job_id}`** *(Auth)*: Returns current job pipeline status.
+- **`GET /result/{job_id}`** *(Auth)*: Returns the synthesized JSON narration script timeline.
+- **`GET /download/{job_id}`** *(Auth)*: Returns URL to the completely dubbed MP4 output.
+- **`GET /my-videos`** *(Auth)*: Lists all persistent historical User jobs.
+
+---
+
+## 🔧 Future Road Map
+* Swap out the SQLite Celery broker for a native Redis container via Docker Compose.
+* Replace `gTTS` with ElevenLabs for hyper-realistic TTS cloning models.
+* Enable Multi-Language detection models.
