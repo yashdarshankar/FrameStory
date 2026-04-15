@@ -1,24 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { useAuthStore } from '../store';
-import { UploadCloud, AudioLines, FileText, CheckCircle2, Download, RefreshCw, Lock } from 'lucide-react';
+import { UploadCloud, CheckCircle2, Video, Lock, ChevronRight, Play, FileText, AudioLines, Download, RefreshCw } from 'lucide-react';
 
 export default function UploadDashboard() {
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const { isAuthenticated, user } = useAuthStore();
   const [videoFile, setVideoFile] = useState(null);
   const [videoUrl, setVideoUrl] = useState(null);
   const [style, setStyle] = useState('Documentary');
-  
   const [jobId, setJobId] = useState(null);
   const [status, setStatus] = useState(null);
-  
   const [result, setResult] = useState(null);
   const [downloadUrl, setDownloadUrl] = useState(null);
-  
   const [currentTime, setCurrentTime] = useState(0);
   const videoRef = useRef(null);
 
-  // Auto-poll if returning from editor
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const pollId = params.get('polling');
@@ -28,256 +24,185 @@ export default function UploadDashboard() {
     }
   }, []);
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('video/')) {
-      setVideoFile(file);
-      setVideoUrl(URL.createObjectURL(file));
-      resetState();
-    }
-  };
-
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
       setVideoFile(file);
       setVideoUrl(URL.createObjectURL(file));
-      resetState();
+      setJobId(null);
+      setStatus(null);
     }
   };
 
-  const resetState = () => {
-    setJobId(null);
-    setStatus(null);
-    setResult(null);
-    setDownloadUrl(null);
-  };
-
   const submitVideo = async () => {
-    if (!videoFile) return;
-    
     const formData = new FormData();
     formData.append('video', videoFile);
     formData.append('style', style);
-    
     try {
       const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/upload-video`, formData);
       setJobId(response.data.job_id);
       setStatus("PENDING");
     } catch (error) {
-      alert("Failed to submit video.");
+      alert("Error uploading video.");
     }
   };
 
   useEffect(() => {
     let intervalId;
-    
     const pollStatus = async () => {
       if (!jobId || status === "COMPLETED" || status === "FAILED") return;
-      
       try {
         const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/status/${jobId}`);
         setStatus(res.data.status);
-        
         if (res.data.status === "COMPLETED") {
-            const resData = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/result/${jobId}`);
-            setResult(resData.data);
-            
-            const dlData = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/download/${jobId}`);
-            setDownloadUrl(dlData.data.url);
+          const resData = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/result/${jobId}`);
+          setResult(resData.data);
+          const dlData = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/download/${jobId}`);
+          setDownloadUrl(dlData.data.url);
         }
-      } catch (err) {
-        console.error(err);
-      }
+      } catch (err) { console.error(err); }
     };
-
-    if (jobId && status !== "COMPLETED" && status !== "FAILED") {
-      pollStatus(); // initial
+    if (jobId && status !== "COMPLETED") {
+      pollStatus();
       intervalId = setInterval(pollStatus, 3000);
     }
-    
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-    };
+    return () => intervalId && clearInterval(intervalId);
   }, [jobId, status]);
 
-  const parseTimestamp = (ts) => {
-    if (!ts) return { start: 0, end: 0 };
-    const parts = ts.split('-');
-    if (parts.length < 2) return { start: 0, end: 0 };
-    
-    const toSeconds = (s) => {
-      const p = s.split(':');
-      if (p.length === 2) return parseInt(p[0]) * 60 + parseFloat(p[1]);
-      return parseFloat(s);
-    };
-    
-    return { start: toSeconds(parts[0]), end: toSeconds(parts[1]) };
-  };
-
-  const timeUpdate = () => {
-    if (videoRef.current) {
-      setCurrentTime(videoRef.current.currentTime);
-    }
-  };
+  const personas = [
+    { id: 'Documentary', name: 'Documentary', icon: '🎬', premium: false },
+    { id: 'Funny', name: 'Roast/Comedy', icon: '😂', premium: true },
+    { id: 'Sports', name: 'Sports Guru', icon: '🏟️', premium: true },
+    { id: 'Spanish', name: 'Spanish Explorer', icon: '🇪🇸', premium: true },
+    { id: 'French', name: 'French Gourmet', icon: '🇫🇷', premium: true },
+    { id: 'Japanese', name: 'Japanese Sensei', icon: '🇯🇵', premium: true },
+  ];
 
   return (
-    <>
-      {!jobId && (
-        <div className="glass-panel" style={{ maxWidth: '800px', margin: '0 auto', animation: 'fadeIn 0.5s' }}>
-          <div 
-            className="upload-zone"
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={handleDrop}
-          >
-            <input type="file" accept="video/*" onChange={handleFileSelect} />
-            {videoUrl ? (
-                <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px'}}>
-                  <CheckCircle2 size={48} color="var(--accent-primary)"/>
-                  <h3 style={{color: 'white'}}>{videoFile.name}</h3>
-                </div>
-            ) : (
-                <>
-                  <UploadCloud size={48} className="upload-icon" />
-                  <h2>Select a video file</h2>
-                  <p style={{color: 'var(--text-secondary)', marginTop: '0.5rem'}}>Drag and drop your file here, or click to browse</p>
-                </>
-            )}
-          </div>
-
-          <div className="controls-section">
-            <div className="input-group">
-              <label>Commentary Style</label>
-              <select className="style-select" value={style} onChange={e => setStyle(e.target.value)}>
-                <option value="Documentary">Documentary (Free)</option>
-                <option value="Funny" disabled={!isAuthenticated}>Funny { !isAuthenticated && '🔒' }</option>
-                <option value="Teacher" disabled={!isAuthenticated}>Teacher (Educational) { !isAuthenticated && '🔒' }</option>
-                <option value="Sports" disabled={!isAuthenticated}>Sports Commentary { !isAuthenticated && '🔒' }</option>
-                <option value="Spanish" disabled={!isAuthenticated}>Spanish Explorer (Multilingual) { !isAuthenticated && '🔒' }</option>
-                <option value="French" disabled={!isAuthenticated}>French Gourmet (Multilingual) { !isAuthenticated && '🔒' }</option>
-                <option value="Japanese" disabled={!isAuthenticated}>Japanese Sensei (Multilingual) { !isAuthenticated && '🔒' }</option>
-              </select>
-              {!isAuthenticated && (
-                <p style={{fontSize: '0.75rem', color: 'var(--accent-primary)', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '4px'}}>
-                  <Lock size={12} /> <a href="/login" style={{color: 'inherit'}}>Login</a> to unlock premium personas
-                </p>
-              )}
-            </div>
-            
-            <button className="btn-primary" onClick={submitVideo} disabled={!videoFile}>
-              Generate AI Commentary
-            </button>
-          </div>
-        </div>
-      )}
-
-      {jobId && status !== "COMPLETED" && status !== "FAILED" && (
-        <div className="loader-container">
-          <div className="pulse-monitor"></div>
-          <h2>Intelligence Engine is Processing</h2>
-          <p style={{color: 'var(--accent-primary)', marginTop: '0.5rem', fontWeight: 'bold'}}>{status}</p>
-          <p style={{color: 'var(--text-secondary)', marginTop: '0.5rem'}}>
-            The AI is analyzing frames, identifying key highlights, and weaving the audio persona.
-          </p>
-        </div>
-      )}
-
-      {status === 'FAILED' && (
-        <div className="loader-container">
-          <h2 style={{color: '#ffb4ab'}}>Job Failed</h2>
-          <button className="btn-primary" onClick={resetState} style={{marginTop: '2rem'}}>Try Again</button>
-        </div>
-      )}
-
-      {status === "COMPLETED" && result && (
-        <div className="dashboard">
-          <div className="video-column">
-            <div className="video-player-container">
-              <video 
-                ref={videoRef}
-                src={downloadUrl || videoUrl} 
-                controls 
-                onTimeUpdate={timeUpdate}
-              />
-            </div>
-            
-             <div style={{marginTop: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem'}}>
-               <div style={{display: 'flex', gap: '1rem'}}>
-                 {downloadUrl && (
-                  <a 
-                    href={downloadUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{
-                      background: 'var(--bg-surface-high)',
-                      color: 'white',
-                      border: '1px solid var(--accent-primary)',
-                      padding: '0.5rem 1rem',
-                      borderRadius: '0.5rem',
-                      fontWeight: 'bold',
-                      textDecoration: 'none',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem'
-                    }}
-                  >
-                    <Download size={16} /> Download
-                  </a>
-                 )}
-
-                 <a 
-                    href={`/edit/${jobId}`}
-                    style={{
-                      background: 'var(--accent-primary)',
-                      color: 'white',
-                      padding: '0.5rem 1rem',
-                      borderRadius: '0.5rem',
-                      fontWeight: 'bold',
-                      textDecoration: 'none',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem'
-                    }}
-                  >
-                    <RefreshCw size={16} /> Open Timeless Editor
-                  </a>
-               </div>
-            </div>
-            
-            <div style={{marginTop: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
-               <div className="insight-card">
-                 <div className="insight-header"><FileText size={14} style={{display:'inline', marginRight:'4px'}}/> Summary</div>
-                 <div className="insight-value" style={{fontSize: '0.875rem'}}>{result.summary}</div>
-               </div>
-               <div className="insight-card">
-                 <div className="insight-header"><AudioLines size={14} style={{display:'inline', marginRight:'4px'}}/> Music Mood</div>
-                 <div className="insight-value" style={{fontSize: '0.875rem'}}>{result.music_mood}</div>
-               </div>
-            </div>
-          </div>
-          
-          <div className="glass-panel" style={{padding: '1.5rem', height: '100%', display: 'flex', flexDirection: 'column'}}>
-            <h2 style={{color: 'white', marginBottom: '0.5rem'}}>{result.title}</h2>
-            <div className="insight-header">Script Timeline</div>
-            
-            <div className="narrations-container">
-              {result.commentary && result.commentary.map((c, i) => {
-                const times = parseTimestamp(c.end_time ? `${c.start_time}-${c.end_time}` : c.timestamp);
-                const isActive = currentTime >= times.start && currentTime <= times.end;
-                
-                return (
-                  <div key={i} className={`narration-item ${isActive ? 'active' : ''}`}>
-                    <div className="timestamp">{c.start_time} - {c.end_time}</div>
-                    <div className="narration-text" style={{fontWeight: 'bold', marginBottom: '0.5rem'}}>{c.narration}</div>
-                    {c.description && <div className="narration-text" style={{fontStyle: 'italic', fontSize: '0.75rem'}}>Context: {c.description}</div>}
+    <div className="main-layout">
+      {/* Left Sidebar: Persona Selector */}
+      <aside className="sidebar-panel">
+        <div className="glass-panel">
+          <h3 className="card-title">Choose Voice Persona</h3>
+          <div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
+            {personas.map(p => (
+              <div 
+                key={p.id} 
+                className={`persona-item ${style === p.id ? 'active' : ''}`}
+                onClick={() => (!p.premium || isAuthenticated) && setStyle(p.id)}
+                style={{opacity: p.premium && !isAuthenticated ? 0.6 : 1}}
+              >
+                <span style={{fontSize: '1.5rem'}}>{p.icon}</span>
+                <div style={{flex: 1}}>
+                  <div style={{fontWeight: 600, fontSize: '0.9rem'}}>{p.name}</div>
+                  <div style={{fontSize: '0.7rem', color: 'var(--text-secondary)'}}>
+                    {p.premium && !isAuthenticated ? 'Premium Only' : 'HD Narration'}
                   </div>
-                )
-              })}
+                </div>
+                {p.premium && !isAuthenticated ? <Lock size={14} /> : <ChevronRight size={14} />}
+              </div>
+            ))}
+          </div>
+          {!isAuthenticated && <p style={{marginTop: '1rem', fontSize: '0.75rem', color: 'var(--accent-primary)'}}>Log in to unlock all voices.</p>}
+        </div>
+      </aside>
+
+      {/* Main Content: Upload or Results */}
+      <section className="main-stage">
+        {!jobId ? (
+          <div className="glass-panel" style={{height: '100%', display: 'flex', flexDirection: 'column'}}>
+            <label className="upload-hero">
+              <input type="file" hidden onChange={handleFileSelect} />
+              {videoUrl ? (
+                <div className="animate-slide">
+                  <CheckCircle2 size={64} color="var(--accent-primary)" style={{marginBottom: '1rem'}} />
+                  <h2 style={{color: 'var(--text-primary)'}}>{videoFile.name}</h2>
+                  <p>Ready to analyze</p>
+                </div>
+              ) : (
+                <>
+                  <UploadCloud size={64} color="var(--accent-primary)" style={{marginBottom: '1rem'}} />
+                  <h1 style={{fontSize: '2.5rem', marginBottom: '1rem'}}>Bring your video to life.</h1>
+                  <p style={{fontSize: '1.1rem', color: 'var(--text-secondary)'}}>Drag and drop or click to upload cinematic footage.</p>
+                </>
+              )}
+            </label>
+            <div style={{marginTop: '2rem', display: 'flex', justifyContent: 'center'}}>
+              <button 
+                className="btn-primary" 
+                onClick={submitVideo} 
+                disabled={!videoFile}
+                style={{width: '100%', maxWidth: '400px'}}
+              >
+                Generate Story Narration
+              </button>
             </div>
           </div>
+        ) : status === "COMPLETED" && result ? (
+          <div className="animate-slide" style={{display: 'flex', flexDirection: 'column', gap: '2rem'}}>
+             <div className="glass-panel" style={{padding: 0, overflow: 'hidden'}}>
+               <div className="video-player-container">
+                  <video 
+                    ref={videoRef}
+                    src={downloadUrl || videoUrl} 
+                    controls 
+                    onTimeUpdate={() => setCurrentTime(videoRef.current.currentTime)}
+                  />
+               </div>
+               <div style={{padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                  <div style={{display: 'flex', gap: '1rem'}}>
+                    <button className="cinematic-button" onClick={() => window.open(downloadUrl)}>
+                      <Download size={18} /> Download Master
+                    </button>
+                    <button className="btn-primary" style={{padding: '0.5rem 1.5rem'}} onClick={() => window.location.href=`/edit/${jobId}`}>
+                      <RefreshCw size={18} /> Open Timeless Editor
+                    </button>
+                  </div>
+                  <div style={{fontWeight: 700, color: 'var(--accent-primary)'}}>
+                    {style} Persona active
+                  </div>
+               </div>
+             </div>
+             <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem'}}>
+               <div className="glass-panel">
+                 <h4 className="card-title">Story Summary</h4>
+                 <p style={{lineHeight: 1.6}}>{result.summary}</p>
+               </div>
+               <div className="glass-panel">
+                 <h4 className="card-title">Audio Landscape</h4>
+                 <p>Mood: <strong>{result.music_mood}</strong></p>
+                 <p style={{marginTop: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)'}}>Music is automatically synced with visual keyframes.</p>
+               </div>
+             </div>
+          </div>
+        ) : (
+          <div className="glass-panel" style={{height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
+             <div className="pulse-monitor"></div>
+             <h2 style={{fontSize: '2rem'}}>{status}...</h2>
+             <p style={{color: 'var(--text-secondary)', marginTop: '1rem'}}>Visions are being analyzed by our neural engine.</p>
+          </div>
+        )}
+      </section>
+
+      {/* Right Sidebar: Timeline Insights */}
+      <aside className="sidebar-panel">
+        <div className="glass-panel" style={{height: '100%', maxHeight: 'calc(100vh - 120px)', overflow: 'hidden', display: 'flex', flexDirection: 'column'}}>
+          <h3 className="card-title">Story Timeline</h3>
+          <div style={{flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', paddingRight: '0.5rem'}}>
+            {result?.commentary ? result.commentary.map((c, i) => {
+              const start = parseFloat(c.start_time?.split(':')[1]) + parseInt(c.start_time?.split(':')[0]) * 60;
+              const end = parseFloat(c.end_time?.split(':')[1]) + parseInt(c.end_time?.split(':')[0]) * 60;
+              const active = currentTime >= start && currentTime < end;
+              return (
+                <div key={i} className={`narration-item ${active ? 'active' : ''}`} style={{padding: '0.75rem', fontSize: '0.85rem'}}>
+                  <div style={{color: 'var(--accent-primary)', fontWeight: 700, marginBottom: '0.25rem'}}>{c.start_time}</div>
+                  <div style={{color: 'var(--text-primary)', fontWeight: 600}}>{c.narration}</div>
+                </div>
+              );
+            }) : <p style={{color: 'var(--text-secondary)'}}>No story analyzed yet.</p>}
+          </div>
         </div>
-      )}
-    </>
+      </aside>
+    </div>
   );
 }
