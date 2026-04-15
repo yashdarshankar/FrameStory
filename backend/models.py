@@ -16,7 +16,7 @@ class VideoJob(Base):
     __tablename__ = 'video_jobs'
 
     id = Column(String, primary_key=True, index=True) # UUID
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True)
     status = Column(String) # PENDING, PROCESSING, COMPLETED, FAILED
     persona = Column(String)
     result_json_path = Column(String, nullable=True)

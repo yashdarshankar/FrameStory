@@ -4,10 +4,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 import os
+from typing import Optional
 import uuid
 import json
 
-from auth import get_db, User, get_current_user, verify_password, get_password_hash, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
+from auth import get_db, User, get_current_user, get_optional_user, verify_password, get_password_hash, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 from models import VideoJob
 from celery_worker import process_video_task
 from datetime import timedelta
@@ -54,9 +55,13 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 async def upload_video(
     video: UploadFile = File(...), 
     style: str = Form("Documentary"), 
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):
+    # Restrict guests to "Documentary" style only
+    if not current_user and style != "Documentary":
+        raise HTTPException(status_code=403, detail="Login required for premium styles")
+
     job_id = str(uuid.uuid4())
     temp_file_path = f"temp_{job_id}_{video.filename}"
     
@@ -66,7 +71,7 @@ async def upload_video(
         
     job = VideoJob(
         id=job_id,
-        user_id=current_user.id,
+        user_id=current_user.id if current_user else None,
         status="PENDING",
         persona=style
     )
@@ -84,18 +89,29 @@ def my_videos(current_user: User = Depends(get_current_user), db: Session = Depe
     return [{"id": v.id, "status": v.status, "persona": v.persona, "video_url": v.final_video_url} for v in videos]
 
 @app.get("/status/{job_id}")
-def get_status(job_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    job = db.query(VideoJob).filter(VideoJob.id == job_id, VideoJob.user_id == current_user.id).first()
+def get_status(job_id: str, current_user: Optional[User] = Depends(get_optional_user), db: Session = Depends(get_db)):
+    job = db.query(VideoJob).filter(VideoJob.id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
+    
+    # Check access: Job must be guest-owned OR owned by current user
+    if job.user_id is not None:
+        if not current_user or job.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Not authorized to access this job")
+
     return {"job_id": job.id, "status": job.status}
 
 @app.get("/result/{job_id}")
-def get_result(job_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    job = db.query(VideoJob).filter(VideoJob.id == job_id, VideoJob.user_id == current_user.id).first()
+def get_result(job_id: str, current_user: Optional[User] = Depends(get_optional_user), db: Session = Depends(get_db)):
+    job = db.query(VideoJob).filter(VideoJob.id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
         
+    # Check access
+    if job.user_id is not None:
+        if not current_user or job.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Not authorized to access this job")
+            
     if not job.result_json_path or not os.path.exists(job.result_json_path):
         raise HTTPException(status_code=404, detail="Result JSON not generated yet")
         
@@ -104,10 +120,15 @@ def get_result(job_id: str, current_user: User = Depends(get_current_user), db: 
     return data
 
 @app.get("/download/{job_id}")
-def get_download(request: Request, job_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    job = db.query(VideoJob).filter(VideoJob.id == job_id, VideoJob.user_id == current_user.id).first()
+def get_download(request: Request, job_id: str, current_user: Optional[User] = Depends(get_optional_user), db: Session = Depends(get_db)):
+    job = db.query(VideoJob).filter(VideoJob.id == job_id).first()
     if not job or not job.final_video_url:
         raise HTTPException(status_code=404, detail="Video not available")
+    
+    # Check access
+    if job.user_id is not None:
+        if not current_user or job.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Not authorized to access this job")
     
     url = f"{request.base_url.scheme}://{request.base_url.netloc}{job.final_video_url}"
     return {"url": url}
