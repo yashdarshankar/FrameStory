@@ -45,8 +45,12 @@ def process_video_task(self, job_id: str, video_path: str, persona: str, origina
         job_record.status = 'PROCESSING_FRAMES'
         db.commit()
         
+        is_guest = job_record.user_id is None
+        max_duration = 45 if is_guest else None
+        max_frames = 10 if is_guest else 30
+        
         frames_dir = os.path.join(temp_dir, "frames")
-        selected_frames = extract_smart_frames(video_path, frames_dir)
+        selected_frames = extract_smart_frames(video_path, frames_dir, max_duration=max_duration, max_frames=max_frames)
         
         if not selected_frames:
             raise Exception("No significant frames could be extracted.")
