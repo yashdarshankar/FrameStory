@@ -1,5 +1,8 @@
 import os
+from dotenv import load_dotenv
 from datetime import datetime, timedelta
+
+load_dotenv()
 from typing import Optional
 from jose import jwt, JWTError
 import bcrypt

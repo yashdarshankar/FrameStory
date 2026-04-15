@@ -3,7 +3,10 @@ import tempfile
 import json
 import uuid
 import shutil
+from dotenv import load_dotenv
 from celery import Celery
+
+load_dotenv()
 from sqlalchemy.orm import Session
 
 from auth import SessionLocal
