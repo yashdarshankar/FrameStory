@@ -23,13 +23,17 @@ function Layout({ children }) {
           <AudioLines size={28} color="var(--accent-primary)" />
           <span>FrameStory</span>
         </div>
-        {isAuthenticated && (
-            <div style={{display: 'flex', gap: '1rem'}}>
-                <a href="/" style={{color: 'white', textDecoration: 'none'}}>New Video</a>
-                <a href="/my-videos" style={{color: 'white', textDecoration: 'none'}}>My Videos</a>
-                <button onClick={logout} style={{background: 'transparent', border: '1px solid var(--accent-primary)', color: 'white', padding: '0.25rem 1rem', borderRadius: '0.5rem', cursor: 'pointer'}}>Logout</button>
-            </div>
-        )}
+        <div style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
+          <a href="/" style={{color: 'white', textDecoration: 'none'}}>New Video</a>
+          {isAuthenticated ? (
+            <>
+              <a href="/my-videos" style={{color: 'white', textDecoration: 'none'}}>My Videos</a>
+              <button onClick={logout} style={{background: 'transparent', border: '1px solid var(--accent-primary)', color: 'white', padding: '0.25rem 1rem', borderRadius: '0.5rem', cursor: 'pointer'}}>Logout</button>
+            </>
+          ) : (
+            <a href="/login" style={{color: 'var(--accent-primary)', textDecoration: 'none', fontWeight: 'bold'}}>Login</a>
+          )}
+        </div>
       </header>
       <main>
         {children}
@@ -51,7 +55,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/" element={<ProtectedRoute><UploadDashboard /></ProtectedRoute>} />
+          <Route path="/" element={<UploadDashboard />} />
           <Route path="/my-videos" element={<ProtectedRoute><MyVideos /></ProtectedRoute>} />
         </Routes>
       </Layout>

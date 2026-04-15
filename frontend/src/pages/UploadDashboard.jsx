@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
-import { UploadCloud, AudioLines, FileText, CheckCircle2, Download, RefreshCw } from 'lucide-react';
+import { useAuthStore } from '../store';
+import { UploadCloud, AudioLines, FileText, CheckCircle2, Download, RefreshCw, Lock } from 'lucide-react';
 
 export default function UploadDashboard() {
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const [videoFile, setVideoFile] = useState(null);
   const [videoUrl, setVideoUrl] = useState(null);
   const [style, setStyle] = useState('Documentary');
@@ -138,11 +140,16 @@ export default function UploadDashboard() {
             <div className="input-group">
               <label>Commentary Style</label>
               <select className="style-select" value={style} onChange={e => setStyle(e.target.value)}>
-                <option value="Documentary">Documentary</option>
-                <option value="Funny">Funny</option>
-                <option value="Teacher">Teacher (Educational)</option>
-                <option value="Sports">Sports Commentary</option>
+                <option value="Documentary">Documentary (Free)</option>
+                <option value="Funny" disabled={!isAuthenticated}>Funny { !isAuthenticated && '🔒' }</option>
+                <option value="Teacher" disabled={!isAuthenticated}>Teacher (Educational) { !isAuthenticated && '🔒' }</option>
+                <option value="Sports" disabled={!isAuthenticated}>Sports Commentary { !isAuthenticated && '🔒' }</option>
               </select>
+              {!isAuthenticated && (
+                <p style={{fontSize: '0.75rem', color: 'var(--accent-primary)', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '4px'}}>
+                  <Lock size={12} /> <a href="/login" style={{color: 'inherit'}}>Login</a> to unlock premium personas
+                </p>
+              )}
             </div>
             
             <button className="btn-primary" onClick={submitVideo} disabled={!videoFile}>
