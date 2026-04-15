@@ -49,7 +49,7 @@ const ScriptEditor = () => {
                 { headers: token ? { Authorization: `Bearer ${token}` } : {} }
             );
             alert("Regeneration started! Redirecting to dashboard...");
-            navigate('/');
+            navigate(`/?polling=${jobId}`);
         } catch (err) {
             alert("Failed to regenerate: " + (err.response?.data?.detail || err.message));
         } finally {

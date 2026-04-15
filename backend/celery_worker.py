@@ -75,7 +75,7 @@ def process_video_task(self, job_id: str, video_path: str, persona: str, origina
         db.commit()
         
         out_file = os.path.join(temp_dir, "output.mp4")
-        generate_audio_and_merge(video_path, out_file, script_data.get("commentary", []), temp_dir, persona_name=job_record.style)
+        generate_audio_and_merge(video_path, out_file, script_data.get("commentary", []), temp_dir, persona_name=job_record.persona)
         
         # Copy to static
         final_video_name = f"commentated_{job_id}.mp4"

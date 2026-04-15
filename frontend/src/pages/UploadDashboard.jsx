@@ -18,6 +18,16 @@ export default function UploadDashboard() {
   const [currentTime, setCurrentTime] = useState(0);
   const videoRef = useRef(null);
 
+  // Auto-poll if returning from editor
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const pollId = params.get('polling');
+    if (pollId && !jobId) {
+        setJobId(pollId);
+        setStatus("REGENERATING_AUDIO");
+    }
+  }, []);
+
   const handleDrop = (e) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];

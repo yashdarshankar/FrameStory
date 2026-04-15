@@ -7,10 +7,24 @@ import os
 from typing import Optional
 import uuid
 import json
+from datetime import timedelta
 
 from auth import get_db, User, get_current_user, get_optional_user, verify_password, get_password_hash, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 from models import VideoJob
 from celery_worker import process_video_task, regenerate_audio_task
+
+app = FastAPI()
+
+os.makedirs("static", exist_ok=True)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.post("/regenerate/{job_id}")
 async def regenerate_audio(
@@ -34,20 +48,6 @@ async def regenerate_audio(
     regenerate_audio_task.delay(job_id, new_commentary)
     
     return {"message": "Regeneration started", "status": "REGENERATING_AUDIO"}
-from datetime import timedelta
-
-app = FastAPI()
-
-os.makedirs("static", exist_ok=True)
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # Authentication Endpoints
 @app.post("/register")
@@ -81,7 +81,6 @@ async def upload_video(
     current_user: Optional[User] = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):
-    # Restrict guests to "Documentary" style only
     if not current_user and style != "Documentary":
         raise HTTPException(status_code=403, detail="Login required for premium styles")
 
@@ -103,7 +102,6 @@ async def upload_video(
     db.add(job)
     db.commit()
     
-    # Send to Celery worker
     process_video_task.delay(job_id, video_path, style, video.filename)
     
     return {"job_id": job_id, "status": "PENDING"}
@@ -119,7 +117,6 @@ def get_status(job_id: str, current_user: Optional[User] = Depends(get_optional_
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     
-    # Check access: Job must be guest-owned OR owned by current user
     if job.user_id is not None:
         if not current_user or job.user_id != current_user.id:
             raise HTTPException(status_code=403, detail="Not authorized to access this job")
@@ -132,7 +129,6 @@ def get_result(job_id: str, current_user: Optional[User] = Depends(get_optional_
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
         
-    # Check access
     if job.user_id is not None:
         if not current_user or job.user_id != current_user.id:
             raise HTTPException(status_code=403, detail="Not authorized to access this job")
@@ -150,7 +146,6 @@ def get_download(request: Request, job_id: str, current_user: Optional[User] = D
     if not job or not job.final_video_url:
         raise HTTPException(status_code=404, detail="Video not available")
     
-    # Check access
     if job.user_id is not None:
         if not current_user or job.user_id != current_user.id:
             raise HTTPException(status_code=403, detail="Not authorized to access this job")
