@@ -19,26 +19,60 @@ def extract_smart_frames(video_path: str, output_dir: str, max_duration: Optiona
         "-filter:v", "fps=1",
     ]
     
-    # If duration limit is provided, stop extraction early
     if max_duration:
         cmd.extend(["-t", str(max_duration)])
         
     cmd.append(os.path.join(output_dir, "frame_%04d.jpg"))
-    
     subprocess.run(cmd, capture_output=True)
     
-    # Get extracted frames
     frames = sorted(glob.glob(os.path.join(output_dir, "*.jpg")))
-    
-    # Heuristics: stay within max_frames limit
-    if len(frames) > max_frames:
-        step = len(frames) / max_frames
-        selected_frames = []
-        for i in range(max_frames):
-            idx = int(i * step)
-            if idx < len(frames):
-                selected_frames.append(frames[idx])
-    else:
-        selected_frames = frames
+    if not frames:
+        return []
 
+    # Smart Selection based on Visual Change
+    if len(frames) <= max_frames:
+        return frames
+
+    # Calculate differences between consecutive frames
+    diffs = []
+    prev_img = None
+    
+    for f in frames:
+        img = cv2.imread(f)
+        if img is None:
+            diffs.append(0)
+            continue
+        
+        img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        img_gray = cv2.resize(img_gray, (100, 100)) # Small size for speed
+        
+        if prev_img is None:
+            diffs.append(0)
+        else:
+            diff = cv2.absdiff(img_gray, prev_img)
+            diffs.append(diff.mean())
+        
+        prev_img = img_gray
+
+    # Select frames:
+    # 1. Always include first and last
+    # 2. Pick top (max_frames - 2) frames with highest visual difference
+    # 3. Sort them chronologically
+    
+    # Exclude first and last from the 'competitors' for highlight spots
+    competitor_indices = list(range(1, len(frames) - 1))
+    
+    # Sort competitor indices by their corresponding difference value
+    # diffs[i] is the difference between frames[i-1] and frames[i]
+    sorted_indices = sorted(competitor_indices, key=lambda i: diffs[i], reverse=True)
+    
+    # Take top N indices
+    num_to_take = min(len(sorted_indices), max_frames - 2)
+    top_indices = sorted_indices[:num_to_take]
+    
+    # Combine with mandatory first and last (0 and len(frames)-1)
+    final_indices = sorted(list(set([0] + top_indices + [len(frames)-1])))
+    
+    selected_frames = [frames[i] for i in final_indices]
+    
     return selected_frames
