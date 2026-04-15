@@ -108,35 +108,50 @@ export default function UploadDashboard() {
       </aside>
 
       {/* Main Content: Upload or Results */}
-      <section className="main-stage">
+      <section className="main-stage" style={{padding: '1rem'}}>
         {!jobId ? (
-          <div className="glass-panel" style={{height: '100%', display: 'flex', flexDirection: 'column'}}>
-            <label className="upload-hero">
+          <div className="glass-panel" style={{height: '100%', display: 'flex', flexDirection: 'column', gap: '2rem', padding: '3rem'}}>
+            <div style={{textAlign: 'left'}}>
+              <h1 style={{fontSize: '3.5rem', fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: '1rem', letterSpacing: '-0.02em'}}>Elevate Every Frame.</h1>
+              <p style={{fontSize: '1.25rem', color: 'var(--text-secondary)', maxWidth: '600px'}}>Transform your cinematic shots into narrated masterpieces using premium AI intelligence.</p>
+            </div>
+
+            <label className="upload-hero" style={{flex: 1, minHeight: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.5rem'}}>
               <input type="file" hidden onChange={handleFileSelect} />
               {videoUrl ? (
-                <div className="animate-slide">
-                  <CheckCircle2 size={64} color="var(--accent-primary)" style={{marginBottom: '1rem'}} />
-                  <h2 style={{color: 'var(--text-primary)'}}>{videoFile.name}</h2>
-                  <p>Ready to analyze</p>
+                <div className="animate-slide" style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                  <div style={{background: 'rgba(99,102,241,0.1)', padding: '2rem', borderRadius: '50%', marginBottom: '1rem'}}>
+                    <CheckCircle2 size={72} color="var(--accent-primary)" />
+                  </div>
+                  <h2 style={{color: 'var(--text-primary)', fontSize: '1.5rem'}}>{videoFile.name}</h2>
+                  <p style={{color: 'var(--accent-primary)', fontWeight: 600, marginTop: '0.5rem'}}>READY FOR NEURAL ANALYSIS</p>
                 </div>
               ) : (
-                <>
-                  <UploadCloud size={64} color="var(--accent-primary)" style={{marginBottom: '1rem'}} />
-                  <h1 style={{fontSize: '2.5rem', marginBottom: '1rem'}}>Bring your video to life.</h1>
-                  <p style={{fontSize: '1.1rem', color: 'var(--text-secondary)'}}>Drag and drop or click to upload cinematic footage.</p>
-                </>
+                <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                  <div className="pulse-monitor" style={{width: '120px', height: '120px', position: 'absolute', opacity: 0.1}}></div>
+                  <UploadCloud size={80} color="var(--accent-primary)" style={{marginBottom: '2rem', position: 'relative'}} />
+                  <h3 style={{fontSize: '1.5rem', marginBottom: '0.5rem'}}>Drop Cinematic Assets</h3>
+                  <p style={{color: 'var(--text-secondary)'}}>Support for MP4, MOV, and AVI up to 4K</p>
+                </div>
               )}
             </label>
-            <div style={{marginTop: '2rem', display: 'flex', justifyContent: 'center'}}>
-              <button 
-                className="btn-primary" 
-                onClick={submitVideo} 
-                disabled={!videoFile}
-                style={{width: '100%', maxWidth: '400px'}}
-              >
-                Generate Story Narration
-              </button>
-            </div>
+            
+            <button 
+              className="btn-primary" 
+              onClick={submitVideo} 
+              disabled={!videoFile}
+              style={{
+                width: '100%', 
+                height: '70px', 
+                fontSize: '1.25rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '1rem'
+              }}
+            >
+              <Play size={24} fill="currentColor" /> Initialize AI Storyteller
+            </button>
           </div>
         ) : status === "COMPLETED" && result ? (
           <div className="animate-slide" style={{display: 'flex', flexDirection: 'column', gap: '2rem'}}>

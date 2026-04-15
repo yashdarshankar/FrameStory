@@ -34,47 +34,68 @@ export default function MyVideos() {
             <button className="btn-primary" onClick={() => navigate('/')}>+ Narrate New Video</button>
         </div>
 
-        <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '2rem'}}>
+        <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '2.5rem'}}>
             {videos.map(v => (
-            <div key={v.id} className="glass-panel" style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
-                <div className="video-player-container" style={{height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-surface-low)'}}>
-                    <Video size={48} color="var(--accent-primary)" style={{opacity: 0.3}} />
+            <div key={v.id} className="glass-panel" style={{
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '1.5rem', 
+                padding: '1.75rem', 
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--glass-border)',
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease'
+            }}>
+                <div className="video-player-container" style={{
+                    height: '220px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    background: 'var(--bg-surface-low)',
+                    borderRadius: '1rem',
+                    position: 'relative',
+                    overflow: 'hidden'
+                }}>
+                    <Video size={56} color="var(--accent-primary)" style={{opacity: 0.15}} />
+                    <div style={{position: 'absolute', bottom: '1rem', right: '1rem', background: 'rgba(0,0,0,0.5)', color: 'white', padding: '0.2rem 0.6rem', borderRadius: '0.4rem', fontSize: '0.7rem'}}>
+                        HD MASTER
+                    </div>
                 </div>
                 
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start'}}>
                     <div>
-                        <h4 style={{margin: 0, fontSize: '1.125rem'}}>Story #{v.id.substring(0,8)}</h4>
-                        <p style={{margin: '0.25rem 0', fontSize: '0.85rem', color: 'var(--text-secondary)'}}>Persona: <strong>{v.persona}</strong></p>
+                        <h4 style={{margin: 0, fontSize: '1.25rem', fontFamily: 'var(--font-display)', fontWeight: 700}}>Story Archive #{v.id.substring(0,8)}</h4>
+                        <p style={{margin: '0.5rem 0', fontSize: '0.9rem', color: 'var(--text-secondary)'}}>Persona: <span style={{color: 'var(--accent-primary)', fontWeight: 600}}>{v.persona}</span></p>
                     </div>
-                    <span style={{
-                        padding: '0.25rem 0.75rem', 
-                        borderRadius: '1rem', 
+                    <div style={{
+                        padding: '0.4rem 1rem', 
+                        borderRadius: '2rem', 
                         fontSize: '0.75rem', 
-                        fontWeight: 700, 
+                        fontWeight: 800, 
                         background: v.status === 'COMPLETED' ? 'rgba(99, 102, 241, 0.1)' : 'var(--bg-surface-high)',
                         color: v.status === 'COMPLETED' ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                        border: '1px solid var(--glass-border)'
+                        border: '1px solid var(--glass-border)',
+                        textTransform: 'uppercase'
                     }}>
                         {v.status}
-                    </span>
+                    </div>
                 </div>
                 
-                <div style={{display: 'flex', gap: '0.75rem', marginTop: 'auto'}}>
+                <div style={{display: 'flex', gap: '1rem', marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--glass-border)'}}>
                     {v.status === 'COMPLETED' && (
                         <>
                             <button 
                                 className="btn-primary" 
-                                style={{flex: 1, fontSize: '0.9rem'}}
+                                style={{flex: 1.5, fontSize: '0.9rem', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem'}}
                                 onClick={() => navigate(`/?polling=${v.id}`)}
                             >
-                                <Play size={16} /> View
+                                <Play size={18} fill="currentColor" /> Play Master
                             </button>
                             <button 
                                 className="cinematic-button" 
-                                style={{flex: 1, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center'}}
+                                style={{flex: 1, fontSize: '0.9rem', height: '48px', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center'}}
                                 onClick={() => navigate(`/edit/${v.id}`)}
                             >
-                                <Settings size={16} /> Edit Script
+                                <Settings size={18} /> Edit Script
                             </button>
                         </>
                     )}

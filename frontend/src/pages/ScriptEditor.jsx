@@ -74,26 +74,49 @@ export default function ScriptEditor() {
 
             {/* Right: Studio Timeline */}
             <aside className="sidebar-panel">
-                <div className="glass-panel" style={{height: '100%', display: 'flex', flexDirection: 'column'}}>
-                    <h3 className="card-title">Story Timeline</h3>
-                    <div style={{flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.5rem', paddingRight: '0.5rem'}}>
+                <div className="glass-panel" style={{height: '100%', display: 'flex', flexDirection: 'column', padding: '2rem'}}>
+                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem'}}>
+                        <h3 className="card-title" style={{margin: 0}}>Director's Script</h3>
+                        <div style={{background: 'var(--accent-primary)', color: 'white', padding: '0.25rem 0.75rem', borderRadius: '2rem', fontSize: '0.7rem', fontWeight: 800}}>PRO EDITING</div>
+                    </div>
+                    
+                    <div className="timeline-scroll" style={{flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.5rem', paddingRight: '1rem'}}>
                         {commentary.map((item, idx) => (
-                            <div key={idx} style={{borderLeft: '2px solid var(--accent-primary)', paddingLeft: '1rem'}}>
-                                <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: 'var(--accent-primary)'}}>
-                                    <Clock size={14} />
-                                    <input 
-                                        style={{background: 'transparent', border: 'none', color: 'inherit', fontWeight: 700, width: '60px'}}
-                                        value={item.start_time}
-                                        onChange={(e) => {
-                                            const updated = [...commentary];
-                                            updated[idx].start_time = e.target.value;
-                                            setCommentary(updated);
-                                        }}
-                                    />
+                            <div key={idx} className="glass-panel" style={{
+                                background: 'var(--bg-surface-low)', 
+                                padding: '1.5rem', 
+                                borderLeft: '4px solid var(--accent-primary)',
+                                borderRadius: '0.75rem'
+                            }}>
+                                <div style={{display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem'}}>
+                                    <div style={{
+                                        background: 'var(--bg-base)',
+                                        padding: '0.4rem 1rem',
+                                        borderRadius: '0.5rem',
+                                        fontSize: '0.8rem',
+                                        fontWeight: 800,
+                                        color: 'var(--accent-primary)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem'
+                                    }}>
+                                        <Clock size={14} /> {item.start_time}
+                                    </div>
+                                    <span style={{fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 700, color: 'var(--text-secondary)'}}>Narration Beat</span>
                                 </div>
                                 <textarea 
                                     className="style-select"
-                                    style={{width: '100%', background: 'var(--bg-surface-low)', height: '100px', backgroundImage: 'none', padding: '0.75rem', fontSize: '0.9rem'}}
+                                    style={{
+                                        width: '100%', 
+                                        background: 'var(--bg-surface)', 
+                                        height: '120px', 
+                                        backgroundImage: 'none', 
+                                        padding: '1rem', 
+                                        fontSize: '0.95rem',
+                                        lineHeight: 1.6,
+                                        border: '1px solid var(--glass-border)',
+                                        borderRadius: '0.75rem'
+                                    }}
                                     value={item.narration}
                                     onChange={(e) => {
                                         const updated = [...commentary];
@@ -105,10 +128,10 @@ export default function ScriptEditor() {
                         ))}
                     </div>
                     
-                    <div style={{marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem'}}>
-                        <button className="btn-primary" onClick={handleSave} disabled={saving}>
-                            {saving ? <RefreshCcw className="animate-spin" /> : <Save size={18} />}
-                            {saving ? ' Regenerating...' : ' Master & Export'}
+                    <div style={{marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: '1rem'}}>
+                        <button className="btn-primary" onClick={handleSave} disabled={saving} style={{height: '60px', borderRadius: '0.75rem'}}>
+                            {saving ? <RefreshCcw className="animate-spin" /> : <Save size={20} />}
+                            {saving ? ' Synchronizing Master...' : ' 🔥 Export Final Master'}
                         </button>
                     </div>
                 </div>

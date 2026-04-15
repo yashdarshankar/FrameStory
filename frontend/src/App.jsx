@@ -28,15 +28,15 @@ function Layout({ children, theme, toggleTheme }) {
           <button className="theme-toggle" onClick={toggleTheme}>
             {theme === 'dark' ? <><Sun size={16} /> Light Mode</> : <><Moon size={16} /> Dark Mode</>}
           </button>
-          <div style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
-            <Link to="/" style={{color: 'var(--text-primary)', textDecoration: 'none', fontWeight: '500'}}>New Video</Link>
+          <div style={{display: 'flex', gap: '1.5rem', alignItems: 'center'}}>
+            <Link to="/" className="nav-link">New Video</Link>
             {isAuthenticated ? (
               <>
-                <Link to="/my-videos" style={{color: 'var(--text-primary)', textDecoration: 'none', fontWeight: '500'}}>My Vault</Link>
-                <button onClick={logout} className="cinematic-button" style={{padding: '0.4rem 1rem'}}>Logout</button>
+                <Link to="/my-videos" className="nav-link">My Vault</Link>
+                <button onClick={logout} className="cinematic-button" style={{padding: '0.5rem 1.25rem', fontSize: '0.85rem'}}>Logout</button>
               </>
             ) : (
-              <Link to="/login" style={{color: 'var(--accent-primary)', textDecoration: 'none', fontWeight: 'bold'}}>Login</Link>
+              <Link to="/login" className="nav-link" style={{color: 'var(--accent-primary)', fontWeight: 700}}>Login</Link>
             )}
           </div>
         </div>
