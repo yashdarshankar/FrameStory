@@ -47,25 +47,41 @@ export default function MyVideos() {
                   {v.status}
                 </span>
                 
-                {v.status === 'COMPLETED' && v.video_url && (
-                  <a 
-                    href={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${v.video_url}`} 
-                    target="_blank" 
-                    rel="noreferrer"
-                    style={{
-                      background: 'var(--bg-surface-low)',
-                      border: '1px solid var(--accent-primary)',
-                      color: 'var(--text-primary)',
-                      textDecoration: 'none',
-                      padding: '0.5rem 1rem',
-                      borderRadius: '0.5rem',
-                      fontSize: '0.875rem',
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    View Video
-                  </a>
-                )}
+                 {v.status === 'COMPLETED' && v.video_url && (
+                   <div style={{display: 'flex', gap: '0.5rem'}}>
+                      <a 
+                        href={`/edit/${v.id}`}
+                        style={{
+                          background: 'var(--accent-primary)',
+                          color: 'white',
+                          textDecoration: 'none',
+                          padding: '0.5rem 1rem',
+                          borderRadius: '0.5rem',
+                          fontSize: '0.875rem',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        Edit Story
+                      </a>
+                      <a 
+                        href={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${v.video_url}`} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        style={{
+                          background: 'var(--bg-surface-low)',
+                          border: '1px solid var(--accent-primary)',
+                          color: 'var(--text-primary)',
+                          textDecoration: 'none',
+                          padding: '0.5rem 1rem',
+                          borderRadius: '0.5rem',
+                          fontSize: '0.875rem',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        View Video
+                      </a>
+                   </div>
+                 )}
             </div>
           </div>
         ))}

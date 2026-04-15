@@ -3,24 +3,21 @@ from google.genai import types
 import json
 import os
 
-def generate_script(frames: list, persona: str, original_filename: str):
+import personality_engine
+
+def generate_script(frames: list, persona_name: str, original_filename: str):
     client = genai.Client()
     
-    persona_prompts = {
-        "Documentary": "You are a professional documentary narrator like David Attenborough. Speak with gravitas and wonder.",
-        "Sports": "You are an energetic WWE or soccer announcer. Be hype, focus on the action and use visceral verbs!",
-        "Funny": "You are a Gen-Z internet comedian channel. Be dramatic, act surprised, maybe a bit sarcastic.",
-        "Teacher": "You are an educational instructor. Break down what is happening thoughtfully and analytically."
-    }
-    
-    persona_instruction = persona_prompts.get(persona, persona_prompts["Documentary"])
+    personality = personality_engine.get_personality(persona_name)
     
     prompt = f"""
 You are an advanced multimodal AI. Analyze these chronologically sampled frames from a video.
-{persona_instruction}
+IMPORTANT: You MUST write the commentary and transcript in the language '{personality.lang}' because that is the persona's native tongue.
+{personality.instruction}
 
 Identify high-value segments (action, scene change, or focal points).
 Do not narrate every single second, only narrate the most important moments.
+Suggest an appropriate 'music_mood' that matches this persona: {personality.music_mood}.
 
 Return a JSON object STRICTLY matching this shape:
 {{

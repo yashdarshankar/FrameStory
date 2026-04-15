@@ -144,6 +144,9 @@ export default function UploadDashboard() {
                 <option value="Funny" disabled={!isAuthenticated}>Funny { !isAuthenticated && '🔒' }</option>
                 <option value="Teacher" disabled={!isAuthenticated}>Teacher (Educational) { !isAuthenticated && '🔒' }</option>
                 <option value="Sports" disabled={!isAuthenticated}>Sports Commentary { !isAuthenticated && '🔒' }</option>
+                <option value="Spanish" disabled={!isAuthenticated}>Spanish Explorer (Multilingual) { !isAuthenticated && '🔒' }</option>
+                <option value="French" disabled={!isAuthenticated}>French Gourmet (Multilingual) { !isAuthenticated && '🔒' }</option>
+                <option value="Japanese" disabled={!isAuthenticated}>Japanese Sensei (Multilingual) { !isAuthenticated && '🔒' }</option>
               </select>
               {!isAuthenticated && (
                 <p style={{fontSize: '0.75rem', color: 'var(--accent-primary)', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '4px'}}>
@@ -189,8 +192,8 @@ export default function UploadDashboard() {
               />
             </div>
             
-            <div style={{marginTop: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-               <div>
+             <div style={{marginTop: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem'}}>
+               <div style={{display: 'flex', gap: '1rem'}}>
                  {downloadUrl && (
                   <a 
                     href={downloadUrl}
@@ -209,9 +212,26 @@ export default function UploadDashboard() {
                       gap: '0.5rem'
                     }}
                   >
-                    <Download size={16} /> Download Synthesized Video
+                    <Download size={16} /> Download
                   </a>
                  )}
+
+                 <a 
+                    href={`/edit/${jobId}`}
+                    style={{
+                      background: 'var(--accent-primary)',
+                      color: 'white',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '0.5rem',
+                      fontWeight: 'bold',
+                      textDecoration: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    <RefreshCw size={16} /> Open Timeless Editor
+                  </a>
                </div>
             </div>
             

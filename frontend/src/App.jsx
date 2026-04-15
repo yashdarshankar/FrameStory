@@ -42,6 +42,8 @@ function Layout({ children }) {
   );
 }
 
+import ScriptEditor from './pages/ScriptEditor';
+
 export default function App() {
   const initAuth = useAuthStore(state => state.initAuth);
   
@@ -57,6 +59,7 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/" element={<UploadDashboard />} />
           <Route path="/my-videos" element={<ProtectedRoute><MyVideos /></ProtectedRoute>} />
+          <Route path="/edit/:jobId" element={<ScriptEditor />} />
         </Routes>
       </Layout>
     </BrowserRouter>

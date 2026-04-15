@@ -21,5 +21,6 @@ class VideoJob(Base):
     persona = Column(String)
     result_json_path = Column(String, nullable=True)
     final_video_url = Column(String, nullable=True)
+    original_video_path = Column(String, nullable=True)
 
     owner = relationship("User", back_populates="videos")

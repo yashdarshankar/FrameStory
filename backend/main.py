@@ -10,7 +10,30 @@ import json
 
 from auth import get_db, User, get_current_user, get_optional_user, verify_password, get_password_hash, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 from models import VideoJob
-from celery_worker import process_video_task
+from celery_worker import process_video_task, regenerate_audio_task
+
+@app.post("/regenerate/{job_id}")
+async def regenerate_audio(
+    job_id: str,
+    data: dict,
+    current_user: Optional[User] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    job = db.query(VideoJob).filter(VideoJob.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+        
+    if job.user_id is not None:
+        if not current_user or job.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Not authorized")
+
+    job.status = 'REGENERATING_AUDIO'
+    db.commit()
+    
+    new_commentary = data.get("commentary")
+    regenerate_audio_task.delay(job_id, new_commentary)
+    
+    return {"message": "Regeneration started", "status": "REGENERATING_AUDIO"}
 from datetime import timedelta
 
 app = FastAPI()
@@ -63,9 +86,10 @@ async def upload_video(
         raise HTTPException(status_code=403, detail="Login required for premium styles")
 
     job_id = str(uuid.uuid4())
-    temp_file_path = f"temp_{job_id}_{video.filename}"
+    os.makedirs("uploads", exist_ok=True)
+    video_path = os.path.join("uploads", f"{job_id}.mp4")
     
-    with open(temp_file_path, "wb") as f:
+    with open(video_path, "wb") as f:
         content = await video.read()
         f.write(content)
         
@@ -73,13 +97,14 @@ async def upload_video(
         id=job_id,
         user_id=current_user.id if current_user else None,
         status="PENDING",
-        persona=style
+        persona=style,
+        original_video_path=video_path
     )
     db.add(job)
     db.commit()
     
     # Send to Celery worker
-    process_video_task.delay(job_id, temp_file_path, style, video.filename)
+    process_video_task.delay(job_id, video_path, style, video.filename)
     
     return {"job_id": job_id, "status": "PENDING"}
 
