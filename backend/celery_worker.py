@@ -15,14 +15,18 @@ from video_processing import extract_smart_frames
 from ai_engine import generate_script
 from audio_merger import generate_audio_and_merge
 
-# Use PostgreSQL via DATABASE_URL
-DB_URL = os.getenv("DATABASE_URL")
-if not DB_URL or not DB_URL.startswith("postgresql"):
-    raise RuntimeError("DATABASE_URL must be a PostgreSQL connection string")
+# Use PostgreSQL or fallback to sqlite
+DB_URL = os.getenv("DATABASE_URL", "sqlite:///./framestory.db")
 
-# Celery SQLAlchemy transport uses 'sqla+postgresql://'
-BROKER_URL = DB_URL.replace("postgresql://", "sqla+postgresql://")
-RESULT_BACKEND = f"db+{DB_URL}"
+if DB_URL.startswith("postgres://"):
+    DB_URL = DB_URL.replace("postgres://", "postgresql://")
+
+if DB_URL.startswith("sqlite"):
+    BROKER_URL = "sqla+" + DB_URL
+    RESULT_BACKEND = "db+" + DB_URL
+else:
+    BROKER_URL = DB_URL.replace("postgresql://", "sqla+postgresql://")
+    RESULT_BACKEND = f"db+{DB_URL}"
 
 celery_app = Celery(
     'framestory_tasks',
