@@ -5,3 +5,8 @@ python-dotenv
 google-genai
 gTTS
 imageio-ffmpeg
+psycopg2-binary
+celery
+sqlalchemy
+bcrypt
+python-jose[cryptography]
