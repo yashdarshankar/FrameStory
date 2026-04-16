@@ -10,3 +10,4 @@ celery
 sqlalchemy
 bcrypt
 python-jose[cryptography]
+opencv-python
