@@ -39,7 +39,7 @@ export default function UploadDashboard() {
     formData.append('video', videoFile);
     formData.append('style', style);
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/upload-video`, formData);
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/upload-video`, formData);
       setJobId(response.data.job_id);
       setStatus("PENDING");
     } catch (error) {
@@ -52,12 +52,12 @@ export default function UploadDashboard() {
     const pollStatus = async () => {
       if (!jobId || status === "COMPLETED" || status === "FAILED") return;
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/status/${jobId}`);
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/status/${jobId}`);
         setStatus(res.data.status);
         if (res.data.status === "COMPLETED") {
-          const resData = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/result/${jobId}`);
+          const resData = await axios.get(`${import.meta.env.VITE_API_URL}/result/${jobId}`);
           setResult(resData.data);
-          const dlData = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/download/${jobId}`);
+          const dlData = await axios.get(`${import.meta.env.VITE_API_URL}/download/${jobId}`);
           setDownloadUrl(dlData.data.url);
         }
       } catch (err) { console.error(err); }

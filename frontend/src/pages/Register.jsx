@@ -15,7 +15,7 @@ export default function Register() {
       formData.append('username', username);
       formData.append('password', password);
       
-      await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/register`, formData);
+      await axios.post(`${import.meta.env.VITE_API_URL}/register`, formData);
       alert("Account created successfully!");
       navigate('/login');
     } catch(err) {

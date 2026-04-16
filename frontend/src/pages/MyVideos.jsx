@@ -12,7 +12,7 @@ export default function MyVideos() {
   useEffect(() => {
     async function fetchVideos() {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/my-videos`, {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/my-videos`, {
             headers: token ? { Authorization: `Bearer ${token}` } : {}
         });
         setVideos(response.data);

@@ -16,7 +16,7 @@ export default function ScriptEditor() {
     useEffect(() => {
         const fetchResult = async () => {
             try {
-                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/result/${jobId}`, {
+                const res = await axios.get(`${import.meta.env.VITE_API_URL}/result/${jobId}`, {
                     headers: token ? { Authorization: `Bearer ${token}` } : {}
                 });
                 setCommentary(res.data.commentary || []);
@@ -33,7 +33,7 @@ export default function ScriptEditor() {
     const handleSave = async () => {
         setSaving(true);
         try {
-            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/regenerate/${jobId}`, 
+            await axios.post(`${import.meta.env.VITE_API_URL}/regenerate/${jobId}`, 
                 { commentary },
                 { headers: token ? { Authorization: `Bearer ${token}` } : {} }
             );
